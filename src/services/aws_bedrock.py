@@ -3,6 +3,8 @@ import boto3
 import json
 from config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION_NAME, AWS_SESSION_TOKEN
 
+
+print(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION_NAME, AWS_SESSION_TOKEN)
 boto3.setup_default_session(
         aws_access_key_id=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
@@ -10,7 +12,9 @@ boto3.setup_default_session(
         aws_session_token=AWS_SESSION_TOKEN
     )
 
-bedrockRuntime = boto3.client('bedrock-runtime')
+
+
+bedrockRuntime = boto3.client('bedrock-runtime', region_name=AWS_REGION_NAME)
 
 class BedrockModel(Enum):
     TITAN_EMBEDDINGS_V2 = "amazon.titan-embed-text-v2:0"
@@ -18,6 +22,24 @@ class BedrockModel(Enum):
     LLAMA_3_2_3B_INSTRUCT = "arn:aws:bedrock:us-west-2:365396090247:inference-profile/us.meta.llama3-2-3b-instruct-v1:0"
     LLAMA_3_2_11B_INSTRUCT = "arn:aws:bedrock:us-west-2:365396090247:inference-profile/us.meta.llama3-2-11b-instruct-v1:0"
 
+
+def createEmbedding(model : BedrockModel, text : str) -> list[float]:
+
+    body = json.dumps({
+        "inputText": text,
+        "dimensions": 1024,  # Optional: You can specify 256, 512, or 1024 (default)
+        "normalize": True    # Optional: Defaults to true
+    })
+
+    response = bedrockRuntime.invoke_model(
+        modelId=model.value,
+        body=body,
+        contentType='application/json',
+    )
+
+    responseBody = json.loads(response.get('body').read())
+
+    return responseBody.get('embedding')
 
 def llmInference(model : BedrockModel, prompt : str, userInput : str | None = None) -> str:
     fullPrompt = f"{prompt}\n\nInput: {userInput}" if userInput else prompt
@@ -39,7 +61,7 @@ def llmInference(model : BedrockModel, prompt : str, userInput : str | None = No
     responseBody = json.loads(response.get('body').read())
 
     return responseBody.get('generation')   
-    
+
 
 
 
