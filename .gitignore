@@ -30,11 +30,12 @@ ENV/
 *.swp
 *.swo
 
+.env
+
 # Testing
 .coverage
 htmlcov/
 .pytest_cache/
-.env
 
 # Misc
 .DS_Store 
